@@ -28,3 +28,9 @@ results/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Ignore trained model
+model/
+
+# Ignore notebook files (optional)
+notebook/
