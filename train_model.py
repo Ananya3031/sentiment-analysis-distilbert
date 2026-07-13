@@ -7,11 +7,12 @@ from transformers import (
 )
 import evaluate
 import numpy as np
+import mlflow
+import mlflow.transformers
+import mlflow.pytorch
 
-# ==========================================
-# Load IMDb Dataset
-# ==========================================
 
+mlflow.set_experiment("Sentiment_Analysis_DistilBERT")
 print("Loading IMDb Dataset...")
 
 dataset = load_dataset("imdb")
@@ -45,9 +46,7 @@ tokenized_dataset = dataset.map(
     batched=True,
 )
 
-# ==========================================
-# Small Dataset (Fast Training)
-# ==========================================
+
 
 train_dataset = (
     tokenized_dataset["train"]
@@ -61,9 +60,7 @@ test_dataset = (
     .select(range(500))
 )
 
-# ==========================================
-# Load Model
-# ==========================================
+
 
 print("Loading DistilBERT Model...")
 
@@ -72,9 +69,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     num_labels=2,
 )
 
-# ==========================================
-# Accuracy Metric
-# ==========================================
+
 
 accuracy = evaluate.load("accuracy")
 
@@ -120,9 +115,7 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
-# ==========================================
-# Trainer
-# ==========================================
+
 
 trainer = Trainer(
     model=model,
@@ -138,34 +131,32 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
 )
 
-# ==========================================
-# Train
-# ==========================================
+
 
 print("\nTraining Started...\n")
 
-trainer.train()
+with mlflow.start_run():
 
-print("\nTraining Completed!\n")
+    mlflow.log_param("learning_rate", 2e-5)
+    mlflow.log_param("batch_size", 16)
+    mlflow.log_param("epochs", 2)
 
-# ==========================================
-# Evaluate
-# ==========================================
+    print("\nTraining Started...\n")
 
-results = trainer.evaluate()
+    trainer.train()
 
-print("\nEvaluation Results")
+    print("\nTraining Completed!\n")
 
-print(results)
+    results = trainer.evaluate()
 
-# ==========================================
-# Save Model
-# ==========================================
+    print(results)
 
-trainer.save_model("./model")
+    mlflow.log_metric("eval_accuracy", results["eval_accuracy"])
+    mlflow.log_metric("eval_loss", results["eval_loss"])
 
-tokenizer.save_pretrained("./model")
+    trainer.save_model("./model")
+    tokenizer.save_pretrained("./model")
 
-print("\nModel Saved Successfully!")
+    mlflow.pytorch.log_model(model, "model")
 
-print("Location : ./model")
+    print("Model Saved Successfully!")
