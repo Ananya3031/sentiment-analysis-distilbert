@@ -1,16 +1,10 @@
-from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-# Get absolute path to the project root
-BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_ID = "ananya311/sentiment-analysis-distilbert"
 
-# Absolute path to model folder
-MODEL_PATH = BASE_DIR / "model"
+print(f"Loading model from Hugging Face: {MODEL_ID}")
 
-print("Loading model from:", MODEL_PATH)
-
-tokenizer = AutoTokenizer.from_pretrained(str(MODEL_PATH))
-
-model = AutoModelForSequenceClassification.from_pretrained(str(MODEL_PATH))
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
 
 print("Model loaded successfully!")
